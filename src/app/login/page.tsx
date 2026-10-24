@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { api, errorMessage } from "@/lib/client";
 
 export default function LoginPage() {
@@ -30,7 +31,10 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-      <Logo />
+      <div className="flex items-center justify-between gap-3">
+        <Logo />
+        <ThemeToggle />
+      </div>
       <h1 className="mt-8 font-serif text-5xl text-ink">Welcome back.</h1>
       <p className="mt-3 text-muted">Sign in to the circle you already belong to.</p>
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
@@ -47,6 +51,9 @@ export default function LoginPage() {
           {pending ? "Signing in…" : "Sign in"}
         </button>
       </form>
+      <Link href="/" className="mt-3 block w-full rounded-full border border-line bg-card py-3 text-center text-sm font-semibold text-ink">
+        Back home
+      </Link>
       <p className="mt-8 text-sm text-muted">
         New here? <Link href="/join" className="font-semibold text-ink underline decoration-line underline-offset-4">Start or join a circle</Link>
       </p>

@@ -15,6 +15,7 @@ type Member = {
 
 export function FamilyPanel() {
   const { user, refreshUser } = useApp();
+  const manages = user.admin || user.active?.role === "owner";
   const [members, setMembers] = useState<Member[]>([]);
   const [invite, setInvite] = useState(user.active?.family.inviteCode || "");
   const [error, setError] = useState("");
@@ -99,7 +100,7 @@ export function FamilyPanel() {
           <p className="mt-3 font-serif text-4xl tracking-[0.18em]">{invite}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => void copyCode()} className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white">Copy code</button>
-            {user.active.role === "owner" ? (
+            {manages ? (
               <button type="button" onClick={() => void rotate()} className="rounded-full border border-line px-4 py-2 text-sm font-semibold">New code</button>
             ) : null}
           </div>
@@ -114,7 +115,11 @@ export function FamilyPanel() {
                 <Link href={`/people/${member.user.id}`} className="font-semibold">{member.user.name}</Link>
                 <p className="truncate text-sm text-muted">{member.user.bio || `Joined ${timeAgo(member.joinedAt)}`}</p>
               </div>
-              {member.role === "owner" ? <span className="text-xs uppercase tracking-[0.14em] text-terra">Owner</span> : null}
+              {member.user.id === user.id && user.admin ? (
+                <span className="text-xs uppercase tracking-[0.14em] text-terra">Admin</span>
+              ) : member.role === "owner" ? (
+                <span className="text-xs uppercase tracking-[0.14em] text-terra">Owner</span>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -141,7 +146,7 @@ export function FamilyPanel() {
       </form>
       {user.active ? (
         <button type="button" onClick={() => void leave()} className="text-sm text-muted">
-          {user.active.role === "owner" ? "Close this circle if you are the last person in it" : "Leave this circle"}
+          {manages ? "Close this circle if you are the last person in it" : "Leave this circle"}
         </button>
       ) : null}
     </div>

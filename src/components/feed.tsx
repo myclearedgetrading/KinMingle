@@ -95,7 +95,7 @@ export function Feed({ authorId, showComposer = true }: { authorId?: string; sho
         {liveNow[0] ? (
           <Link href={`/live/${liveNow[0].id}`} className="flex items-center justify-between rounded-[1.5rem] bg-night px-5 py-4 text-paper">
             <span>
-              <span className="text-xs uppercase tracking-[0.16em] text-[#e7b089]">Live now</span>
+              <span className="text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">Live now</span>
               <span className="mt-1 block font-serif text-2xl">{liveNow[0].hostName} · {liveNow[0].title}</span>
             </span>
             <span className="text-sm font-semibold">Join</span>

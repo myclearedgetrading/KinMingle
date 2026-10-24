@@ -7,6 +7,7 @@ import { api } from "@/lib/client";
 import type { SessionUser } from "@/lib/types";
 import { Avatar } from "@/components/avatar";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export type RealtimeMessage = { type: string; [key: string]: unknown };
 
@@ -166,7 +167,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <AppContext.Provider value={value}>
       <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="sticky top-0 hidden h-screen flex-col border-r border-line bg-card/80 px-4 py-6 lg:flex">
-          <Logo href="/home" />
+          <div className="flex flex-col items-start gap-4 px-1">
+            <Logo href="/home" />
+            <ThemeToggle />
+          </div>
           <p className="mt-6 px-3 text-xs font-medium uppercase tracking-[0.16em] text-muted">
             {user.active?.family.name || "No circle yet"}
           </p>
@@ -179,6 +183,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <Avatar name={user.name} color={user.avatarColor} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{user.name}</p>
+              {user.admin ? <p className="text-xs uppercase tracking-[0.14em] text-terra">Admin</p> : null}
               <button type="button" onClick={() => void signOut()} className="text-xs text-muted hover:text-ink">
                 Sign out
               </button>
@@ -188,9 +193,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div>
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper/90 px-4 py-3 backdrop-blur lg:hidden">
             <Logo href="/home" />
-            <Link href="/settings" aria-label="Your account">
-              <Avatar name={user.name} color={user.avatarColor} size={36} />
-            </Link>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Link href="/settings" aria-label="Your account">
+                <Avatar name={user.name} color={user.avatarColor} size={36} />
+              </Link>
+            </div>
           </header>
           <main className="w-full max-w-3xl px-4 py-6 pb-28 lg:max-w-6xl lg:px-8 lg:py-8">{children}</main>
         </div>

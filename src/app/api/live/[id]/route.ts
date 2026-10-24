@@ -44,7 +44,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (!session) return error("That stream doesn't exist.", 404);
   const member = await membershipFor(auth.user.id, session.familyId);
   if (!member) return error("That stream doesn't exist.", 404);
-  if (session.hostId !== auth.user.id && member.role !== "owner") {
+  if (session.hostId !== auth.user.id && member.role !== "owner" && !auth.user.admin) {
     return error("Only the host can end this stream.", 403);
   }
   if (session.status === "live") {

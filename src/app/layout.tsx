@@ -7,20 +7,25 @@ const sans = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
   title: { default: "KinMingle", template: "%s · KinMingle" },
-  description: "A private room for family and close friends to share life.",
+  description: "Life happens. Stay close.",
   applicationName: "KinMingle",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f3eee6",
+  themeColor: "#0057E7",
   width: "device-width",
   initialScale: 1,
 };
 
+const themeBoot = `(function(){try{var t=localStorage.getItem("kinmingle-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark";}catch(e){document.documentElement.dataset.theme="dark";}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable}`}>
-      <body className="font-sans text-ink antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning className={`${serif.variable} ${sans.variable}`}>
+      <body className="font-sans text-ink antialiased">
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+        {children}
+      </body>
     </html>
   );
 }

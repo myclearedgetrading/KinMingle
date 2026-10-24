@@ -3,17 +3,18 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTML
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <Link href="/home" className={`font-serif text-2xl tracking-tight ${className}`}>
+    <Link href="/home" className={`inline-flex items-center gap-2 font-sans text-2xl font-semibold tracking-tight ${className}`}>
+      <img src="/brand/km.png" alt="" className="h-8 w-8" />
       KinMingle
     </Link>
   );
 }
 
 const buttonStyles = {
-  primary: "bg-ink text-paper hover:bg-[#2a241e]",
+  primary: "bg-ink text-paper hover:opacity-90",
   ghost: "bg-transparent text-ink hover:bg-ink/5",
-  danger: "bg-terra text-white hover:bg-[#a84520]",
-  soft: "border border-line bg-white text-ink hover:border-ink/30",
+  danger: "bg-terra text-white hover:bg-[#0046ba]",
+  soft: "border border-line bg-card text-ink hover:border-ink/30",
 };
 
 export function Button({
@@ -48,7 +49,7 @@ export function Avatar({ name, color, size = 40 }: { name: string; color: string
 }
 
 export const fieldClass =
-  "w-full rounded-2xl border border-line bg-white px-4 py-3 text-ink outline-none ring-terra/30 placeholder:text-muted/70 focus:ring-2";
+  "w-full rounded-2xl border border-line bg-card px-4 py-3 text-ink outline-none ring-terra/30 placeholder:text-muted/70 focus:ring-2";
 
 export function Field({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (

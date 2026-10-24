@@ -13,12 +13,16 @@ const cookieBase = {
 export async function setSessionCookie(user: { id: string; name: string }) {
   const token = await signSession({ sub: user.id, name: user.name });
   const jar = await cookies();
-  jar.set(COOKIE, token, { ...cookieBase, maxAge: 60 * 60 * 24 * 30 });
+  jar.set(COOKIE, token, { ...cookieBase, maxAge: 60 * 60 * 24 * 365 });
 }
 
 export async function clearSessionCookie() {
   const jar = await cookies();
   jar.set(COOKIE, "", { ...cookieBase, maxAge: 0 });
+}
+
+export function managesCircle(auth: { user: { admin: boolean }; active: { role: string } | null }) {
+  return auth.user.admin || auth.active?.role === "owner";
 }
 
 export async function membershipFor(userId: string, familyId: string) {
@@ -69,6 +73,7 @@ export async function getAuth() {
       email: user.email,
       bio: user.bio,
       avatarColor: user.avatarColor,
+      admin: user.admin,
     },
     memberships,
     active: activeMembership

@@ -59,7 +59,7 @@ export function LiveLobby() {
         <p className="mt-2 text-muted">Start a live for the circle. Anyone who joins can turn on a camera, talk, or share a screen.</p>
       </div>
       {!secure ? (
-        <p className="rounded-2xl bg-[#f8e7e1] px-4 py-3 text-sm text-terra">
+        <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-terra">
           The camera is blocked on this address. On this computer, open KinMingle at localhost. Phones need HTTPS before they can broadcast.
         </p>
       ) : null}

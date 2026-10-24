@@ -3,14 +3,14 @@ export const COOKIE = "papis_session";
 export const EMOJIS = ["❤️", "😂", "🥹", "👏", "🔥"] as const;
 
 export const AVATAR_COLORS = [
-  "#c4552a",
-  "#2f5d50",
-  "#3d4f7c",
-  "#8a5a44",
-  "#6b4c7a",
-  "#3f6b4a",
-  "#a33b3b",
-  "#3e5f73",
+  "#0057E7",
+  "#071B4D",
+  "#3d6fd8",
+  "#1a4fbf",
+  "#4c7fe8",
+  "#0e3a8a",
+  "#2f6fe0",
+  "#163a7a",
 ];
 
 export function colorFor(seed: string) {

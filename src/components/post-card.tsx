@@ -18,7 +18,7 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
   const [error, setError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [openImage, setOpenImage] = useState<string | null>(null);
-  const canDelete = post.author.id === user.id || user.active?.role === "owner";
+  const canDelete = post.author.id === user.id || user.admin || user.active?.role === "owner";
 
   useEffect(() => {
     setComments(post.comments);
@@ -110,7 +110,7 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
       {post.live ? (
         <Link href={`/live/${post.live.id}`} className="mt-4 flex items-center justify-between rounded-2xl bg-night px-4 py-3 text-paper">
           <span>
-            <span className="block text-xs uppercase tracking-[0.16em] text-[#e7b089]">{post.live.status === "live" ? "Live now" : "Live ended"}</span>
+            <span className="block text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">{post.live.status === "live" ? "Live now" : "Live ended"}</span>
             <span className="mt-1 block font-serif text-2xl">{post.live.title}</span>
           </span>
           <span className="text-sm font-semibold">{post.live.status === "live" ? "Watch" : "Open"}</span>
@@ -123,7 +123,7 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
             key={item.emoji}
             type="button"
             onClick={() => void react(item.emoji)}
-            className={`rounded-full border px-3 py-1.5 text-sm ${item.mine ? "border-terra bg-[#f8e7e1]" : "border-line"}`}
+            className={`rounded-full border px-3 py-1.5 text-sm ${item.mine ? "border-terra bg-blush" : "border-line"}`}
             aria-pressed={item.mine}
           >
             {item.emoji} {item.count > 0 ? item.count : ""}

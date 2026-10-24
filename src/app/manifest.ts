@@ -4,10 +4,14 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "KinMingle",
     short_name: "KinMingle",
-    description: "A private room for family and friends",
+    description: "Life happens. Stay close.",
     start_url: "/home",
     display: "standalone",
-    background_color: "#f3eee6",
-    theme_color: "#1c1915",
+    background_color: "#071B4D",
+    theme_color: "#0057E7",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
   };
 }

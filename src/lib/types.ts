@@ -73,6 +73,7 @@ export type SessionUser = {
   email: string;
   bio: string;
   avatarColor: string;
+  admin: boolean;
   hasCircle: boolean;
   active: { role: string; family: FamilyDTO } | null;
   memberships: MembershipDTO[];

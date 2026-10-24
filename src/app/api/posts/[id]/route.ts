@@ -2,7 +2,7 @@ import { broadcast } from "@/lib/broadcast";
 import { prisma } from "@/lib/db";
 import { getPost } from "@/lib/feed";
 import { assertSameOrigin, error, json } from "@/lib/http";
-import { getAuth } from "@/lib/session";
+import { getAuth, managesCircle } from "@/lib/session";
 import { removeUpload } from "@/lib/storage";
 
 export const runtime = "nodejs";
@@ -29,8 +29,7 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ id: string }
     include: { media: true, liveSession: true },
   });
   if (!post) return error("That post is gone.", 404);
-  const isOwner = auth.active.role === "owner";
-  if (post.authorId !== auth.user.id && !isOwner) return error("You can only remove your own posts.", 403);
+  if (post.authorId !== auth.user.id && !managesCircle(auth)) return error("You can only remove your own posts.", 403);
   if (post.liveSession?.status === "live") {
     await prisma.liveSession.update({
       where: { id: post.liveSession.id },

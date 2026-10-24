@@ -108,10 +108,10 @@ export function JoinForm() {
       }
     >
       <div className="mb-4 grid grid-cols-2 rounded-full bg-paper p-1 text-sm">
-        <button type="button" className={`rounded-full py-2 ${mode === "create" ? "bg-white shadow-sm" : ""}`} onClick={() => setMode("create")}>
+        <button type="button" className={`rounded-full py-2 ${mode === "create" ? "bg-card shadow-card" : ""}`} onClick={() => setMode("create")}>
           Start
         </button>
-        <button type="button" className={`rounded-full py-2 ${mode === "join" ? "bg-white shadow-sm" : ""}`} onClick={() => setMode("join")}>
+        <button type="button" className={`rounded-full py-2 ${mode === "join" ? "bg-card shadow-card" : ""}`} onClick={() => setMode("join")}>
           Join
         </button>
       </div>

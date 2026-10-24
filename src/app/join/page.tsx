@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { api, errorMessage } from "@/lib/client";
 
 export default function JoinPage() {
@@ -38,12 +39,15 @@ export default function JoinPage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-      <Logo />
+      <div className="flex items-center justify-between gap-3">
+        <Logo />
+        <ThemeToggle />
+      </div>
       <h1 className="mt-8 font-serif text-5xl text-ink">{mode === "start" ? "Start the circle." : "Join the circle."}</h1>
       <p className="mt-3 text-muted">
         {mode === "start" ? "You will get an invite code to share with family and close friends." : "Use the code someone in the family sent you."}
       </p>
-      <div className="mt-6 grid grid-cols-2 rounded-full bg-paper-deep p-1" style={{ background: "#e7e0d4" }}>
+      <div className="mt-6 grid grid-cols-2 rounded-full bg-line/40 p-1">
         {(["start", "join"] as const).map((item) => (
           <button
             key={item}

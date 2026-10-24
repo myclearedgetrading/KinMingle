@@ -14,6 +14,7 @@ model User {
   passwordHash   String
   bio            String        @default("")
   avatarColor    String
+  admin          Boolean       @default(false)
   activeFamilyId String?
   createdAt      DateTime      @default(now())
   activeFamily   Family?       @relation("ActiveFamily", fields: [activeFamilyId], references: [id], onDelete: SetNull)

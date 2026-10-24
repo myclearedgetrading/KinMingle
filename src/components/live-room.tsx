@@ -484,7 +484,7 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
         ) : null}
         <div className="flex flex-wrap items-center gap-3 px-5 py-4">
           <div className="min-w-0 flex-1">
-            <p className="text-xs uppercase tracking-[0.16em] text-[#e7b089]">{session.host.name} started this</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">{session.host.name} started this</p>
             <h1 className="truncate font-serif text-3xl">{session.title}</h1>
             <p className="text-sm text-white/60">{people.length ? `${people.length} in the room` : live ? "Connecting" : "Ended"}</p>
           </div>
@@ -503,7 +503,7 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
             {hosting ? "" : " Turn on your camera, mic, or screen whenever you want to be part of it."}
           </p>
         ) : null}
-        {error ? <p className="px-5 pb-4 text-sm text-[#f3c7b8]">{error}</p> : null}
+        {error ? <p className="px-5 pb-4 text-sm text-[#ffc9c2]">{error}</p> : null}
       </section>
       <aside className="flex h-[32rem] flex-col rounded-[1.75rem] border border-line bg-card lg:h-auto">
         <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
