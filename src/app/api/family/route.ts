@@ -1,4 +1,5 @@
 import { makeInviteCode } from "@/lib/codes";
+import { findCover } from "@/lib/cover";
 import { prisma } from "@/lib/db";
 import { assertSameOrigin, error, fromZod, json, readJson } from "@/lib/http";
 import { getAuth } from "@/lib/session";
@@ -18,6 +19,7 @@ export async function GET() {
   return json({
     family: auth.active.family,
     role: auth.active.role,
+    hasCover: Boolean(await findCover(auth.active.family.id)),
     members: members.map((member) => ({
       role: member.role,
       joinedAt: member.createdAt.toISOString(),

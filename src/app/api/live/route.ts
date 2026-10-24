@@ -15,7 +15,10 @@ export async function GET() {
     where: { familyId: auth.active.family.id },
     orderBy: { startedAt: "desc" },
     take: 20,
-    include: { host: { select: { id: true, name: true, avatarColor: true } } },
+    include: {
+      host: { select: { id: true, name: true, avatarColor: true } },
+      post: { include: { media: { where: { name: { startsWith: "live-recording" } }, select: { id: true } } } },
+    },
   });
   return json({
     sessions: sessions.map((session) => ({
@@ -26,6 +29,7 @@ export async function GET() {
       endedAt: session.endedAt?.toISOString() ?? null,
       peakViewers: session.peakViewers,
       host: session.host,
+      hasRecording: session.post.media.length > 0,
     })),
   });
 }

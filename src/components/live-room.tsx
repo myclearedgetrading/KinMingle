@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { api, errorMessage } from "@/lib/client";
 import { timeAgo } from "@/lib/format";
+import { RoomRecorder, type RecordedStream } from "@/components/room-recorder";
 import type { RealtimeMessage } from "@/components/shell";
 import { useApp } from "@/components/shell";
 
@@ -14,6 +15,7 @@ type Session = {
   title: string;
   status: string;
   hostId: string;
+  recordingUrl: string | null;
   host: { id: string; name: string; avatarColor: string };
 };
 type Signal = { kind?: string; sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit };
@@ -27,6 +29,16 @@ type Peer = {
 };
 
 const ICE: RTCIceServer[] = [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }];
+const MAX_RECORDING = 250 * 1024 * 1024;
+
+async function uploadRecording(sessionId: string, blob: Blob) {
+  const type = (blob.type || "video/webm").split(";")[0] || "video/webm";
+  const ext = type.includes("mp4") ? "mp4" : "webm";
+  const file = new File([blob], `live-recording.${ext}`, { type });
+  const form = new FormData();
+  form.set("file", file);
+  return api<{ url?: string; error?: string; already?: boolean }>(`/api/live/${sessionId}/recording`, { method: "POST", body: form });
+}
 
 export function LiveRoom({ sessionId }: { sessionId: string }) {
   const { user, send, subscribe } = useApp();
@@ -44,6 +56,9 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
   const [soundOn, setSoundOn] = useState(false);
   const [displaced, setDisplaced] = useState(false);
   const [mediaTick, setMediaTick] = useState(0);
+  const [recording, setRecording] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const displacedRef = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
   const cameraTrack = useRef<MediaStreamTrack | null>(null);
@@ -53,7 +68,15 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
   const sendRef = useRef(send);
   const listRef = useRef<HTMLDivElement>(null);
   const onMessage = useRef<(message: RealtimeMessage) => void>(() => undefined);
+  const recorderRef = useRef<RoomRecorder | null>(null);
+  const finishing = useRef(false);
+  const previewRef = useRef<MediaStream | null>(null);
+  const remotesRef = useRef<Record<string, MediaStream>>({});
+  const peopleRef = useRef<Person[]>([]);
   sendRef.current = send;
+  previewRef.current = preview;
+  remotesRef.current = remotes;
+  peopleRef.current = people;
 
   const hosting = session?.hostId === user.id && session.status === "live";
   const live = session?.status === "live";
@@ -241,6 +264,7 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
         return;
       }
       setSession(room.data.session);
+      setRecordingUrl(room.data.session.recordingUrl);
       if (chat.ok) setMessages(chat.data.messages);
     })();
     return () => {
@@ -276,11 +300,28 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
       } catch {
         if (!cancelled) setError("Allow the camera and microphone, then try again.");
       }
+      if (cancelled || displacedRef.current || recorderRef.current) return;
+      try {
+        const recorder = new RoomRecorder();
+        await recorder.start();
+        if (cancelled || displacedRef.current) {
+          recorder.discard();
+          return;
+        }
+        recorderRef.current = recorder;
+        setRecording(true);
+      } catch {
+        if (!cancelled) setError("This browser can't save a recording of the live. The call still works.");
+      }
     }
 
     void publish();
     return () => {
       cancelled = true;
+      if (!finishing.current) {
+        recorderRef.current?.discard();
+        recorderRef.current = null;
+      }
       sendRef.current({ type: "leave-live", sessionId });
       streamRef.current?.getTracks().forEach((track) => track.stop());
       screenTrack.current?.stop();
@@ -309,6 +350,18 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
   useEffect(() => subscribe((message) => onMessage.current(message)), [subscribe]);
 
   useEffect(() => {
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    const items: RecordedStream[] = [];
+    if (preview) items.push({ id: "you", label: user.name, stream: preview });
+    for (const [id, stream] of Object.entries(remotes)) {
+      const person = people.find((item) => item.connId === id);
+      items.push({ id, label: person?.name || "Someone", stream });
+    }
+    recorder.setStreams(items);
+  }, [preview, remotes, people, recording, user.name]);
+
+  useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages.length]);
 
@@ -330,11 +383,17 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
       setMessages((current) => (current.some((item) => item.id === chat.id) ? current : [...current, chat]));
     }
     if (message.type === "live-ended" && message.sessionId === sessionId) {
-      setSession((current) => (current ? { ...current, status: "ended" } : current));
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      void finishRecording().finally(() => {
+        setSession((current) => (current ? { ...current, status: "ended" } : current));
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        void loadSavedRecording();
+      });
     }
     if (message.type === "host-replaced") {
       displacedRef.current = true;
+      recorderRef.current?.discard();
+      recorderRef.current = null;
+      setRecording(false);
       streamRef.current?.getTracks().forEach((track) => track.stop());
       screenTrack.current?.stop();
       setMicOn(false);
@@ -434,7 +493,44 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
     }
   }
 
+  async function loadSavedRecording() {
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      const room = await api<{ session: Session }>(`/api/live/${sessionId}`);
+      if (room.ok && room.data.session.recordingUrl) {
+        setRecordingUrl(room.data.session.recordingUrl);
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
+  }
+
+  async function finishRecording() {
+    if (finishing.current) return;
+    const recorder = recorderRef.current;
+    if (!recorder) return;
+    finishing.current = true;
+    recorderRef.current = null;
+    setRecording(false);
+    setSaving(true);
+    try {
+      const blob = await recorder.stop();
+      if (!blob) return;
+      if (blob.size > MAX_RECORDING) {
+        setError("The recording is over 250 MB, so it wasn't saved. A shorter live will save.");
+        return;
+      }
+      const { ok, data } = await uploadRecording(sessionId, blob);
+      if (!ok) setError(errorMessage(data, "The recording didn't save."));
+      else if (data.url) setRecordingUrl(data.url);
+    } catch {
+      setError("The recording didn't save.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function endLive() {
+    await finishRecording();
     const { ok, data } = await api(`/api/live/${sessionId}`, { method: "PATCH", body: JSON.stringify({ status: "ended" }) });
     if (!ok) setError(errorMessage(data, "Could not end the live."));
   }
@@ -465,9 +561,11 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
       <section className="overflow-hidden rounded-[1.75rem] bg-night text-paper">
         <div className={`grid gap-2 p-2 ${tiles.length > 1 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-          {tiles.length === 0 ? (
+          {!live && recordingUrl ? (
+            <video src={recordingUrl} controls playsInline preload="metadata" className="aspect-video w-full rounded-2xl bg-black" />
+          ) : tiles.length === 0 ? (
             <div className="grid aspect-video place-items-center rounded-2xl bg-black text-sm text-white/70">
-              {live ? (hosting ? "Starting your camera…" : `Waiting for ${session.host.name}…`) : "This live has ended"}
+              {saving ? "Saving the recording…" : live ? (hosting ? "Starting your camera…" : `Waiting for ${session.host.name}…`) : "This live has ended"}
             </div>
           ) : (
             tiles.map((tile, index) => (
@@ -486,7 +584,9 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
           <div className="min-w-0 flex-1">
             <p className="text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">{session.host.name} started this</p>
             <h1 className="truncate font-serif text-3xl">{session.title}</h1>
-            <p className="text-sm text-white/60">{people.length ? `${people.length} in the room` : live ? "Connecting" : "Ended"}</p>
+            <p className="text-sm text-white/60">
+              {saving ? "Saving the recording…" : recording ? "Recording · saved for the circle when you end" : people.length ? `${people.length} in the room` : live ? "Connecting" : recordingUrl ? "Recording saved" : "Ended"}
+            </p>
           </div>
           {live && !displaced ? (
             <>
@@ -522,7 +622,10 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
             <button type="submit" className="text-sm font-semibold text-pine">Send</button>
           </form>
         ) : (
-          <p className="border-t border-line p-4 text-sm text-muted">This live has ended. <Link href="/live" className="font-semibold text-ink">Back to live</Link></p>
+          <p className="border-t border-line p-4 text-sm text-muted">
+            {saving ? "Saving the recording…" : recordingUrl ? "The recording is on this page and on the family page." : "This live has ended."}{" "}
+            <Link href="/home" className="font-semibold text-ink">Back home</Link>
+          </p>
         )}
       </aside>
     </div>

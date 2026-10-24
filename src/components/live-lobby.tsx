@@ -12,6 +12,7 @@ type Session = {
   status: string;
   startedAt: string;
   endedAt: string | null;
+  hasRecording?: boolean;
   host: { id: string; name: string; avatarColor: string };
 };
 
@@ -56,7 +57,7 @@ export function LiveLobby() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <h1 className="font-serif text-5xl">Live</h1>
-        <p className="mt-2 text-muted">Start a live for the circle. Anyone who joins can turn on a camera, talk, or share a screen.</p>
+        <p className="mt-2 text-muted">Start a live for the circle. Anyone who joins can turn on a camera, talk, or share a screen. When the host ends it, the recording stays on the family page.</p>
       </div>
       {!secure ? (
         <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-terra">
@@ -81,7 +82,7 @@ export function LiveLobby() {
                 <span className="block font-semibold">{session.title}</span>
                 <span className="text-sm text-muted">{session.host.name} · {session.status === "live" ? "Live now" : `Ended ${timeAgo(session.endedAt || session.startedAt)}`}</span>
               </span>
-              <span className="text-sm font-semibold">{session.status === "live" ? "Join" : "Replay chat"}</span>
+              <span className="text-sm font-semibold">{session.status === "live" ? "Join" : session.hasRecording ? "Watch" : "Replay chat"}</span>
             </Link>
           </li>
         ))}

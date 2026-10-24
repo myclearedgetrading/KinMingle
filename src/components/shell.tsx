@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/client";
 import type { SessionUser } from "@/lib/types";
@@ -26,6 +26,8 @@ type AppValue = {
   liveNow: LiveNow[];
   send: (message: Record<string, unknown>) => void;
   subscribe: (listener: (message: RealtimeMessage) => void) => () => void;
+  composeNonce: number;
+  requestCompose: () => void;
 };
 
 const AppContext = createContext<AppValue | null>(null);
@@ -49,7 +51,8 @@ function NavLink({ href, label, live }: { href: string; label: string; live?: bo
   return (
     <Link
       href={href}
-      className={`flex items-center justify-between rounded-2xl px-3 py-2.5 text-sm font-medium ${active ? "bg-paper text-ink" : "text-muted hover:bg-paper/70 hover:text-ink"}`}
+      aria-current={active ? "page" : undefined}
+      className={`flex min-h-11 items-center justify-between rounded-xl px-3 text-sm font-medium transition-colors ${active ? "bg-blush text-terra" : "text-muted hover:bg-paper hover:text-ink"}`}
     >
       <span>{label}</span>
       {live ? <span className="h-2 w-2 rounded-full bg-red-600" aria-label="Someone is live" /> : null}
@@ -58,6 +61,9 @@ function NavLink({ href, label, live }: { href: string; label: string; live?: bo
 }
 
 export function Shell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [composeNonce, setComposeNonce] = useState(0);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [online, setOnline] = useState<{ id: string; name: string }[]>([]);
   const [liveNow, setLiveNow] = useState<LiveNow[]>([]);
@@ -145,10 +151,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const send = useCallback((message: Record<string, unknown>) => sendRef.current(message), []);
 
+  const requestCompose = useCallback(() => {
+    if (pathname !== "/home") {
+      sessionStorage.setItem("kinmingle-compose", "1");
+      router.push("/home");
+      return;
+    }
+    setComposeNonce((value) => value + 1);
+  }, [pathname, router]);
+
   const value = useMemo<AppValue | null>(() => {
     if (!user) return null;
-    return { user, refreshUser, online, liveNow, send, subscribe };
-  }, [user, refreshUser, online, liveNow, send, subscribe]);
+    return { user, refreshUser, online, liveNow, send, subscribe, composeNonce, requestCompose };
+  }, [user, refreshUser, online, liveNow, send, subscribe, composeNonce, requestCompose]);
 
   async function signOut() {
     await api("/api/auth/logout", { method: "POST" });
@@ -163,18 +178,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const someoneLive = liveNow.length > 0;
 
+  const profileHref = `/profile/${user.id}`;
+
   return (
     <AppContext.Provider value={value}>
-      <div className="min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="sticky top-0 hidden h-screen flex-col border-r border-line bg-card/80 px-4 py-6 lg:flex">
+      <div className="mx-auto min-h-screen w-full max-w-[1440px] lg:grid lg:grid-cols-[230px_minmax(0,1fr)]">
+        <aside className="sticky top-0 hidden h-screen flex-col border-r border-line bg-card px-4 py-6 lg:flex">
           <div className="flex flex-col items-start gap-4 px-1">
             <Logo href="/home" />
             <ThemeToggle />
           </div>
-          <p className="mt-6 px-3 text-xs font-medium uppercase tracking-[0.16em] text-muted">
+          <p className="mt-6 truncate px-3 text-xs font-medium uppercase tracking-[0.16em] text-muted">
             {user.active?.family.name || "No circle yet"}
           </p>
-          <nav className="mt-3 space-y-1">
+          <nav aria-label="Circle" className="mt-3 space-y-1">
             {links.map((link) => (
               <NavLink key={link.href} {...link} live={link.href === "/live" && someoneLive} />
             ))}
@@ -190,27 +207,57 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </aside>
-        <div>
+        <div className="min-w-0">
           <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper/90 px-4 py-3 backdrop-blur lg:hidden">
             <Logo href="/home" />
             <div className="flex items-center gap-2">
               <ThemeToggle />
-              <Link href="/settings" aria-label="Your account">
+              <Link href={profileHref} aria-label="Your profile">
                 <Avatar name={user.name} color={user.avatarColor} size={36} />
               </Link>
             </div>
           </header>
-          <main className="w-full max-w-3xl px-4 py-6 pb-28 lg:max-w-6xl lg:px-8 lg:py-8">{children}</main>
+          <main className="mx-auto w-full max-w-[1120px] px-4 py-5 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-8 lg:py-8 lg:pb-10">{children}</main>
         </div>
-        <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-line bg-card lg:hidden">
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} className="relative px-2 py-3 text-center text-xs font-semibold text-ink">
-              {link.label}
-              {link.href === "/live" && someoneLive ? <span className="absolute right-6 top-2 h-1.5 w-1.5 rounded-full bg-red-600" /> : null}
-            </Link>
-          ))}
+        <nav
+          aria-label="Primary"
+          className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur lg:hidden"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="mx-auto grid max-w-lg grid-cols-5">
+            <MobileLink href="/home" label="Home" active={pathname === "/home"} />
+            <MobileLink href="/family" label="Family" active={pathname.startsWith("/family")} />
+            <button type="button" onClick={requestCompose} className="flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold text-terra">
+              <PlusIcon />
+              Create
+            </button>
+            <MobileLink href="/live" label="Live" active={pathname.startsWith("/live")} live={someoneLive} />
+            <MobileLink href={profileHref} label="Profile" active={pathname === profileHref || pathname === "/settings"} />
+          </div>
         </nav>
       </div>
     </AppContext.Provider>
+  );
+}
+
+function MobileLink({ href, label, active, live }: { href: string; label: string; active: boolean; live?: boolean }) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`relative flex min-h-11 flex-col items-center justify-center gap-0.5 px-1 text-[11px] font-semibold ${active ? "text-terra" : "text-muted"}`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-terra" : "bg-transparent"}`} aria-hidden />
+      {label}
+      {live ? <span className="absolute right-3 top-2 h-1.5 w-1.5 rounded-full bg-red-600" aria-label="Someone is live" /> : null}
+    </Link>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+      <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+    </svg>
   );
 }

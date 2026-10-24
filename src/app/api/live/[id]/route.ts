@@ -12,11 +12,15 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const { id } = await ctx.params;
   const session = await prisma.liveSession.findUnique({
     where: { id },
-    include: { host: { select: { id: true, name: true, avatarColor: true } } },
+    include: {
+      host: { select: { id: true, name: true, avatarColor: true } },
+      post: { include: { media: { where: { name: { startsWith: "live-recording" } }, take: 1 } } },
+    },
   });
   if (!session) return error("That stream doesn't exist.", 404);
   const member = await membershipFor(auth.user.id, session.familyId);
   if (!member) return error("That stream doesn't exist.", 404);
+  const recording = session.post.media[0];
   return json({
     session: {
       id: session.id,
@@ -28,6 +32,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       endedAt: session.endedAt?.toISOString() ?? null,
       peakViewers: session.peakViewers,
       host: session.host,
+      recordingUrl: recording ? `/api/media/${recording.id}` : null,
     },
   });
 }

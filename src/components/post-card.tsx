@@ -110,7 +110,9 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
       {post.live ? (
         <Link href={`/live/${post.live.id}`} className="mt-4 flex items-center justify-between rounded-2xl bg-night px-4 py-3 text-paper">
           <span>
-            <span className="block text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">{post.live.status === "live" ? "Live now" : "Live ended"}</span>
+            <span className="block text-xs uppercase tracking-[0.16em] text-[#9ec5ff]">
+              {post.live.status === "live" ? "Live now" : post.media.some((item) => item.kind === "video") ? "Recording saved" : "Live ended"}
+            </span>
             <span className="mt-1 block font-serif text-2xl">{post.live.title}</span>
           </span>
           <span className="text-sm font-semibold">{post.live.status === "live" ? "Watch" : "Open"}</span>
@@ -198,7 +200,11 @@ function MediaGrid({ media, onOpen }: { media: PostDTO["media"]; onOpen: (url: s
         <div className={`grid gap-2 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
           {images.map((item) => (
             <button key={item.id} type="button" onClick={() => onOpen(item.url)} className="overflow-hidden rounded-2xl bg-paper">
-              <img src={item.url} alt={item.name} className="max-h-[32rem] w-full object-cover" />
+              <img
+                src={item.url}
+                alt={item.name}
+                className={images.length === 1 ? "max-h-[36rem] w-full object-contain" : "aspect-[4/3] w-full object-contain"}
+              />
             </button>
           ))}
         </div>
@@ -227,10 +233,10 @@ function VoiceNote({ src, name }: { src: string; name: string }) {
   const label = name.startsWith("voice-note") ? "Voice note" : name;
 
   return (
-    <div className="flex items-center gap-3 rounded-full bg-paper px-3 py-2">
+    <div className="flex items-center gap-3 rounded-2xl border border-line bg-paper px-3 py-2">
       <button
         type="button"
-        className="grid h-10 w-10 place-items-center rounded-full bg-pine text-sm font-semibold text-white"
+        className="grid h-11 w-11 place-items-center rounded-full bg-pine text-sm font-semibold text-white"
         onClick={() => {
           if (!audio) return;
           if (audio.paused) void audio.play();
