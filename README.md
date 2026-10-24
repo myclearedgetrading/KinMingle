@@ -1,6 +1,6 @@
-# Papis
+# KinMingle
 
-Papis is a private room for family and close friends. People create an account, join a circle with an invite code, and post updates the whole circle can see: text, photos, videos, voice notes, and files. Someone can also go live, and the others watch in the browser.
+KinMingle is a private room for family and close friends. People create an account, join a circle with an invite code, and post updates the whole circle can see: text, photos, videos, voice notes, and files. Someone can also go live, and the others watch in the browser.
 
 ## Run it
 
@@ -24,4 +24,4 @@ A home connection can comfortably host a small circle, roughly a handful of view
 
 ## Before a real family uses it
 
-Change `AUTH_SECRET` and `REALTIME_SECRET` in `.env` if this copy will leave your machine. Put Papis behind HTTPS if people will join from outside the house, and set `COOKIE_SECURE=true` once the certificate is real.
+Change `AUTH_SECRET` and `REALTIME_SECRET` in `.env` if this copy will leave your machine. Put KinMingle behind HTTPS if people will join from outside the house, and set `COOKIE_SECURE=true` once the certificate is real.

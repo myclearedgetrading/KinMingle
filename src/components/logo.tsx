@@ -11,7 +11,7 @@ export function Logo({ href = "/" }: { href?: string }) {
           <span className="absolute bottom-0 left-0 h-1.5 w-1.5 rounded-full bg-[#8fbfa8]" />
         </span>
       </span>
-      <span className="font-serif text-2xl leading-none tracking-tight">Papis</span>
+      <span className="font-serif text-2xl leading-none tracking-tight">KinMingle</span>
     </Link>
   );
 }

@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTML
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <Link href="/home" className={`font-serif text-2xl tracking-tight ${className}`}>
-      Papis
+      KinMingle
     </Link>
   );
 }

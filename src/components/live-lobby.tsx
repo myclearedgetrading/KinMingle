@@ -60,7 +60,7 @@ export function LiveLobby() {
       </div>
       {!secure ? (
         <p className="rounded-2xl bg-[#f8e7e1] px-4 py-3 text-sm text-terra">
-          The camera is blocked on this address. On this computer, open Papis at localhost. Phones need HTTPS before they can broadcast.
+          The camera is blocked on this address. On this computer, open KinMingle at localhost. Phones need HTTPS before they can broadcast.
         </p>
       ) : null}
       <form onSubmit={goLive} className="rounded-[1.75rem] border border-line bg-card p-5 shadow-card">

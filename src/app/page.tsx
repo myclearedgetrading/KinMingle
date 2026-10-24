@@ -32,7 +32,7 @@ export default function LandingPage() {
             The family room, without the group-chat noise.
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-            WhatsApp can stay the place you talk. Papis is the place everyone goes to see what life looks like — a photo, a voice note, a school file, a live look at the room.
+            WhatsApp can stay the place you talk. KinMingle is the place everyone goes to see what life looks like — a photo, a voice note, a school file, a live look at the room.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/join" className="rounded-full bg-terra px-5 py-3 text-sm font-semibold text-white hover:bg-[#a3431e]">

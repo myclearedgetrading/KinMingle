@@ -154,7 +154,7 @@ function AuthFrame({
     <main className="mx-auto grid min-h-screen max-w-5xl items-center gap-10 px-5 py-10 md:grid-cols-2">
       <div>
         <Link href="/" className="font-serif text-3xl">
-          Papis
+          KinMingle
         </Link>
         <h1 className="mt-6 font-serif text-5xl tracking-tight">{title}</h1>
         <p className="mt-3 max-w-sm text-lg text-muted">{subtitle}</p>

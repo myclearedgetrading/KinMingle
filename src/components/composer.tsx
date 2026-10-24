@@ -68,7 +68,7 @@ export function Composer({ onPosted }: { onPosted: (post: PostDTO) => void }) {
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
-      setError("Voice notes need a secure page. On this computer, open Papis at localhost.");
+      setError("Voice notes need a secure page. On this computer, open KinMingle at localhost.");
       return;
     }
     try {
@@ -92,7 +92,7 @@ export function Composer({ onPosted }: { onPosted: (post: PostDTO) => void }) {
       setSeconds(0);
       timer.current = setInterval(() => setSeconds((value) => value + 1), 1000);
     } catch {
-      setError("Papis couldn't use the microphone. Allow access, then try again.");
+      setError("KinMingle couldn't use the microphone. Allow access, then try again.");
     }
   }
 

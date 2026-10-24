@@ -77,7 +77,7 @@ function guessMime(ext: string, kind: StoredFile["kind"]) {
 export async function classifyUpload(file: File): Promise<{ ok: true; file: StoredFile } | { ok: false; error: string }> {
   const name = (file.name || "upload").slice(0, 120);
   const ext = extension(name);
-  if (BLOCKED.has(ext)) return { ok: false, error: `${name} isn't a kind of file Papis will keep.` };
+  if (BLOCKED.has(ext)) return { ok: false, error: `${name} isn't a kind of file KinMingle will keep.` };
   if (file.size <= 0) return { ok: false, error: `${name} is empty.` };
 
   const mime = (file.type || "application/octet-stream").split(";")[0].toLowerCase();
@@ -101,7 +101,7 @@ export async function classifyUpload(file: File): Promise<{ ok: true; file: Stor
     kind = "file";
   }
 
-  if (!kind) return { ok: false, error: `${name} isn't a file type Papis accepts.` };
+  if (!kind) return { ok: false, error: `${name} isn't a file type KinMingle accepts.` };
 
   return {
     ok: true,

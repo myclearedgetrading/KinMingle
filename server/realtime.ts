@@ -317,7 +317,7 @@ async function main() {
     data: { status: "ended", endedAt: new Date() },
   });
   server.listen(port, "0.0.0.0", () => {
-    console.log(`Papis live server listening on ${port}`);
+    console.log(`KinMingle live server listening on ${port}`);
   });
 }
 

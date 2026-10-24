@@ -6,9 +6,9 @@ const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif" });
 const sans = Outfit({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: { default: "Papis", template: "%s · Papis" },
+  title: { default: "KinMingle", template: "%s · KinMingle" },
   description: "A private room for family and close friends to share life.",
-  applicationName: "Papis",
+  applicationName: "KinMingle",
 };
 
 export const viewport: Viewport = {
