@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background-color: #f3eee6;
+  background-image:
+    radial-gradient(1000px 420px at 0% -10%, rgba(196, 85, 42, 0.1), transparent 55%),
+    radial-gradient(800px 380px at 100% 0%, rgba(47, 93, 80, 0.09), transparent 50%);
+}
+
+::selection {
+  background: #f3c7b8;
+}
+
+:focus-visible {
+  outline: 2px solid #c4552a;
+  outline-offset: 2px;
+}
+
+input,
+textarea,
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}

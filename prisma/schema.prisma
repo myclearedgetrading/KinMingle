@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(cuid())
+  email          String        @unique
+  name           String
+  passwordHash   String
+  bio            String        @default("")
+  avatarColor    String
+  activeFamilyId String?
+  createdAt      DateTime      @default(now())
+  activeFamily   Family?       @relation("ActiveFamily", fields: [activeFamilyId], references: [id], onDelete: SetNull)
+  memberships    Membership[]
+  posts          Post[]
+  comments       Comment[]
+  reactions      Reaction[]
+  hostedLives    LiveSession[] @relation("HostedLives")
+  liveMessages   LiveMessage[]
+}
+
+model Family {
+  id           String        @id @default(cuid())
+  name         String
+  inviteCode   String        @unique
+  createdAt    DateTime      @default(now())
+  activeUsers  User[]        @relation("ActiveFamily")
+  memberships  Membership[]
+  posts        Post[]
+  liveSessions LiveSession[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  role      String   @default("member")
+  userId    String
+  familyId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId])
+  @@index([familyId])
+}
+
+model Post {
+  id          String       @id @default(cuid())
+  body        String       @default("")
+  authorId    String
+  familyId    String
+  createdAt   DateTime     @default(now())
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  family      Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  media       Media[]
+  comments    Comment[]
+  reactions   Reaction[]
+  liveSession LiveSession?
+
+  @@index([familyId, createdAt])
+  @@index([authorId])
+}
+
+model Media {
+  id         String @id @default(cuid())
+  postId     String
+  kind       String
+  mime       String
+  name       String
+  size       Int
+  storageKey String
+  post       Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  body      String
+  postId    String
+  authorId  String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+}
+
+model Reaction {
+  id     String @id @default(cuid())
+  emoji  String
+  postId String
+  userId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId, emoji])
+}
+
+model LiveSession {
+  id          String        @id @default(cuid())
+  title       String
+  status      String        @default("live")
+  hostId      String
+  familyId    String
+  postId      String        @unique
+  peakViewers Int           @default(0)
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  host        User          @relation("HostedLives", fields: [hostId], references: [id], onDelete: Cascade)
+  family      Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  post        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  messages    LiveMessage[]
+
+  @@index([familyId, status])
+}
+
+model LiveMessage {
+  id        String      @id @default(cuid())
+  body      String
+  sessionId String
+  authorId  String
+  createdAt DateTime    @default(now())
+  session   LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
