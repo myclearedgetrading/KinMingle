@@ -9,16 +9,19 @@ import type { CommentDTO, PostDTO } from "@/lib/types";
 import { useApp } from "@/components/shell";
 import { Avatar } from "@/components/avatar";
 
-export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange: (post: PostDTO) => void; onDelete: (id: string) => void }) {
+export function PostCard({ post, onChange, onDelete, onShared }: { post: PostDTO; onChange: (post: PostDTO) => void; onDelete: (id: string) => void; onShared?: (post: PostDTO) => void }) {
   const { user } = useApp();
   const [comments, setComments] = useState(post.comments);
   const [count, setCount] = useState(post.commentCount);
   const [reactions, setReactions] = useState(post.reactions);
   const [comment, setComment] = useState("");
+  const [replyTo, setReplyTo] = useState<CommentDTO | null>(null);
+  const [sharing, setSharing] = useState(false);
+  const [shareText, setShareText] = useState("");
   const [error, setError] = useState("");
   const [confirming, setConfirming] = useState(false);
   const [openImage, setOpenImage] = useState<string | null>(null);
-  const canDelete = post.author.id === user.id || user.admin || user.active?.role === "owner";
+  const canDelete = post.author.id === user.id || user.admin || (post.visibility === "circle" && post.familyId === user.active?.family.id && user.active?.role === "owner");
 
   useEffect(() => {
     setComments(post.comments);
@@ -44,7 +47,7 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
     if (!body) return;
     const { ok, data } = await api<{ comment: CommentDTO; commentCount: number; error?: string }>(`/api/posts/${post.id}/comments`, {
       method: "POST",
-      body: JSON.stringify({ body }),
+      body: JSON.stringify({ body, parentId: replyTo?.id }),
     });
     if (!ok) {
       setError(errorMessage(data, "Could not add the comment."));
@@ -53,6 +56,22 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
     setComments((current) => [...current, data.comment]);
     setCount(data.commentCount);
     setComment("");
+    setReplyTo(null);
+  }
+
+  async function sharePost(event: React.FormEvent) {
+    event.preventDefault();
+    const { ok, data } = await api<{ post: PostDTO; error?: string }>(`/api/posts/${post.id}/share`, {
+      method: "POST",
+      body: JSON.stringify({ body: shareText }),
+    });
+    if (!ok || !data.post) {
+      setError(errorMessage(data, "Could not share that post."));
+      return;
+    }
+    setSharing(false);
+    setShareText("");
+    onShared?.(data.post);
   }
 
   async function loadAll() {
@@ -64,10 +83,11 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
   }
 
   async function removeComment(id: string) {
-    const { ok } = await api(`/api/comments/${id}`, { method: "DELETE" });
+    const { ok, data } = await api<{ removed?: number }>(`/api/comments/${id}`, { method: "DELETE" });
     if (!ok) return;
-    setComments((current) => current.filter((item) => item.id !== id));
-    setCount((value) => Math.max(0, value - 1));
+    const removed = data.removed || 1;
+    setComments((current) => current.filter((item) => item.id !== id && item.parentId !== id));
+    setCount((value) => Math.max(0, value - removed));
   }
 
   async function removePost() {
@@ -88,11 +108,11 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
   return (
     <article className="rounded-[1.75rem] border border-line bg-card p-4 shadow-card sm:p-5">
       <header className="flex items-start gap-3">
-        <Link href={`/profile/${post.author.id}`}><Avatar name={post.author.name} color={post.author.avatarColor} /></Link>
+        <Link href={`/profile/${post.author.id}`}><Avatar name={post.author.name} color={post.author.avatarColor} userId={post.author.id} photo={post.author.hasAvatar} /></Link>
         <div className="min-w-0 flex-1">
           <Link href={`/profile/${post.author.id}`} className="font-semibold">{post.author.name}</Link>
           <time dateTime={post.createdAt} className="mt-0.5 block text-xs text-muted" title={new Date(post.createdAt).toLocaleString()}>
-            {timeAgo(post.createdAt)}
+            {timeAgo(post.createdAt)} · {post.visibility === "public" ? "Public" : post.familyName || "Private circle"}
           </time>
         </div>
         {canDelete ? (
@@ -107,6 +127,12 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
         ) : null}
       </header>
       {post.body ? <p className="mt-4 whitespace-pre-wrap break-words text-[1.05rem] leading-relaxed">{linkify(post.body)}</p> : null}
+      {post.shared ? (
+        <Link href={`/post/${post.shared.id}`} className="mt-4 block rounded-2xl border border-line bg-paper px-4 py-3">
+          <span className="text-sm font-semibold">{post.shared.author.name}</span>
+          <span className="mt-1 block text-sm text-muted">{post.shared.body || "Shared a post"}</span>
+        </Link>
+      ) : null}
       {post.live ? (
         <Link href={`/live/${post.live.id}`} className="mt-4 flex items-center justify-between rounded-2xl bg-night px-4 py-3 text-paper">
           <span>
@@ -132,17 +158,30 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
           </button>
         ))}
       </div>
+      <div className="mt-3 flex flex-wrap gap-3 text-sm">
+        {post.visibility === "public" ? (
+          <button type="button" onClick={() => setSharing((open) => !open)} className="font-semibold text-pine">
+            Share{post.shareCount > 0 ? ` · ${post.shareCount}` : ""}
+          </button>
+        ) : (
+          <span className="text-muted">Only this circle can see this</span>
+        )}
+      </div>
+      {sharing ? (
+        <form onSubmit={sharePost} className="mt-3 flex gap-2">
+          <input value={shareText} onChange={(event) => setShareText(event.target.value)} placeholder="Add a note, or share it as is" maxLength={4000} className="min-w-0 flex-1 rounded-full border border-line bg-paper px-4 py-2 text-sm" />
+          <button type="submit" className="rounded-full px-3 text-sm font-semibold text-pine">Share</button>
+        </form>
+      ) : null}
       <div className="mt-4 space-y-3">
-        {comments.map((item) => (
-          <div key={item.id} className="flex gap-2 text-sm">
-            <Avatar name={item.author.name} color={item.author.avatarColor} size={28} />
-            <p className="min-w-0 flex-1">
-              <Link href={`/profile/${item.author.id}`} className="font-semibold">{item.author.name}</Link>{" "}
-              <span className="whitespace-pre-wrap break-words">{item.body}</span>
-            </p>
-            {item.author.id === user.id ? (
-              <button type="button" onClick={() => void removeComment(item.id)} className="text-xs text-muted">Remove</button>
-            ) : null}
+        {comments.filter((item) => !item.parentId).map((item) => (
+          <div key={item.id} className="space-y-2">
+            <CommentRow item={item} mine={item.author.id === user.id} onRemove={() => void removeComment(item.id)} onReply={() => setReplyTo(item)} />
+            {comments.filter((reply) => reply.parentId === item.id).map((reply) => (
+              <div key={reply.id} className="pl-9">
+                <CommentRow item={reply} mine={reply.author.id === user.id} onRemove={() => void removeComment(reply.id)} onReply={() => setReplyTo(item)} />
+              </div>
+            ))}
           </div>
         ))}
         {count > comments.length ? (
@@ -154,10 +193,13 @@ export function PostCard({ post, onChange, onDelete }: { post: PostDTO; onChange
           <input
             value={comment}
             onChange={(event) => setComment(event.target.value)}
-            placeholder="Add a comment"
+            placeholder={replyTo ? `Reply to ${replyTo.author.name}` : "Add a comment"}
             maxLength={1000}
             className="min-w-0 flex-1 rounded-full border border-line bg-paper px-4 py-2 text-sm"
           />
+          {replyTo ? (
+            <button type="button" onClick={() => setReplyTo(null)} className="text-xs text-muted">Cancel</button>
+          ) : null}
           <button type="submit" className="rounded-full px-3 text-sm font-semibold text-pine">Send</button>
         </form>
       </div>
@@ -176,6 +218,22 @@ export function PostDetail({ initial }: { initial: PostDTO }) {
   const [missing, setMissing] = useState(false);
   if (missing) return <p className="rounded-[1.75rem] border border-line bg-card p-6 text-muted">This update was removed.</p>;
   return <PostCard post={post} onChange={setPost} onDelete={() => setMissing(true)} />;
+}
+
+function CommentRow({ item, mine, onRemove, onReply }: { item: CommentDTO; mine: boolean; onRemove: () => void; onReply: () => void }) {
+  return (
+    <div className="flex gap-2 text-sm">
+      <Avatar name={item.author.name} color={item.author.avatarColor} userId={item.author.id} photo={item.author.hasAvatar} size={28} />
+      <p className="min-w-0 flex-1">
+        <Link href={`/profile/${item.author.id}`} className="font-semibold">{item.author.name}</Link>{" "}
+        <span className="whitespace-pre-wrap break-words">{item.body}</span>
+        <button type="button" onClick={onReply} className="ml-2 text-xs font-semibold text-muted">Reply</button>
+      </p>
+      {mine ? (
+        <button type="button" onClick={onRemove} className="text-xs text-muted">Remove</button>
+      ) : null}
+    </div>
+  );
 }
 
 function linkify(text: string) {

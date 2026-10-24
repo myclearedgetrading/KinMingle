@@ -11,7 +11,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const next = params.get("next") || "/home";
+  const next = params.get("next") || "/feed";
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -25,7 +25,7 @@ export function LoginForm() {
     const data = await response.json();
     setBusy(false);
     if (!response.ok) return setError(data.error || "Could not sign in");
-    const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+    const safe = next.startsWith("/") && !next.startsWith("//") ? next : "/feed";
     window.location.href = safe;
   }
 
@@ -91,7 +91,7 @@ export function JoinForm() {
     const data = await response.json();
     setBusy(false);
     if (!response.ok) return setError(data.error || "Could not finish that");
-    window.location.href = "/home";
+    window.location.href = "/feed";
   }
 
   return (

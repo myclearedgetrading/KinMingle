@@ -48,6 +48,11 @@ export const liveSchema = z.object({
 
 export const commentSchema = z.object({
   body: z.string().trim().min(1, "Write a comment.").max(1000, "That comment is too long."),
+  parentId: z.string().trim().min(1).optional(),
+});
+
+export const shareSchema = z.object({
+  body: z.string().trim().max(4000).optional().or(z.literal("")),
 });
 
 export const reactionSchema = z.object({

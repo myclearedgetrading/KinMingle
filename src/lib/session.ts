@@ -73,6 +73,8 @@ export async function getAuth() {
       email: user.email,
       bio: user.bio,
       avatarColor: user.avatarColor,
+      hasAvatar: user.hasAvatar,
+      hasCover: user.hasCover,
       admin: user.admin,
     },
     memberships,

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "KinMingle",
     short_name: "KinMingle",
     description: "Life happens. Stay close.",
-    start_url: "/home",
+    start_url: "/feed",
     display: "standalone",
     background_color: "#071B4D",
     theme_color: "#0057E7",

@@ -47,7 +47,7 @@ export function FamilyManager({
     });
     const data = await response.json();
     if (!response.ok) return setError(data.error || "Could not join");
-    window.location.href = "/home";
+    window.location.href = "/circles";
   }
 
   async function create(event: React.FormEvent) {
@@ -66,7 +66,7 @@ export function FamilyManager({
     const response = await fetch("/api/family/leave", { method: "POST" });
     const data = await response.json();
     if (!response.ok) return setError(data.error || "Could not leave");
-    window.location.href = data.hasCircle ? "/home" : "/join";
+    window.location.href = "/circles";
   }
 
   return (

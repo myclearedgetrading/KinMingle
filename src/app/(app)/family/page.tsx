@@ -1,7 +1,5 @@
-import { FamilyPanel } from "@/components/family-panel";
-
-export const metadata = { title: "Family" };
+import { redirect } from "next/navigation";
 
 export default function FamilyPage() {
-  return <FamilyPanel />;
+  redirect("/circles");
 }

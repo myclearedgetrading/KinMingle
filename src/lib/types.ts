@@ -2,12 +2,14 @@ export type AuthorDTO = {
   id: string;
   name: string;
   avatarColor: string;
+  hasAvatar?: boolean;
 };
 
 export type CommentDTO = {
   id: string;
   body: string;
   createdAt: string;
+  parentId: string | null;
   author: AuthorDTO;
 };
 
@@ -29,15 +31,26 @@ export type LiveDTO = {
   hostId: string;
 };
 
+export type SharedPostDTO = {
+  id: string;
+  body: string;
+  author: AuthorDTO;
+};
+
 export type PostDTO = {
   id: string;
   body: string;
+  visibility: "public" | "circle";
+  familyId: string | null;
+  familyName: string | null;
   createdAt: string;
   author: AuthorDTO;
   media: MediaDTO[];
   reactions: Array<{ emoji: string; userId: string }>;
   commentCount: number;
+  shareCount: number;
   comments: CommentDTO[];
+  shared: SharedPostDTO | null;
   live: LiveDTO | null;
 };
 
@@ -73,6 +86,8 @@ export type SessionUser = {
   email: string;
   bio: string;
   avatarColor: string;
+  hasAvatar: boolean;
+  hasCover: boolean;
   admin: boolean;
   hasCircle: boolean;
   active: { role: string; family: FamilyDTO } | null;

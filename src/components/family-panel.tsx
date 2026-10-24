@@ -50,22 +50,22 @@ export function FamilyPanel() {
 
   async function createCircle(event: React.FormEvent) {
     event.preventDefault();
-    const { ok, data } = await api("/api/family", { method: "POST", body: JSON.stringify({ name: circleName }) });
+    const { ok, data } = await api<{ familyId?: string }>("/api/family", { method: "POST", body: JSON.stringify({ name: circleName }) });
     if (!ok) {
       setError(errorMessage(data, "Could not create that circle."));
       return;
     }
-    window.location.href = "/home";
+    window.location.href = `/circles/${data.familyId || ""}`;
   }
 
   async function joinCircle(event: React.FormEvent) {
     event.preventDefault();
-    const { ok, data } = await api("/api/family/join", { method: "POST", body: JSON.stringify({ inviteCode: code }) });
+    const { ok, data } = await api<{ familyId?: string }>("/api/family/join", { method: "POST", body: JSON.stringify({ inviteCode: code }) });
     if (!ok) {
       setError(errorMessage(data, "Could not join with that code."));
       return;
     }
-    window.location.href = "/home";
+    window.location.href = `/circles/${data.familyId || ""}`;
   }
 
   async function switchTo(familyId: string) {
@@ -74,7 +74,7 @@ export function FamilyPanel() {
       setError(errorMessage(data, "Could not switch circles."));
       return;
     }
-    window.location.href = "/home";
+    window.location.href = `/circles/${familyId}`;
   }
 
   async function leave() {
@@ -83,14 +83,14 @@ export function FamilyPanel() {
       setError(errorMessage(data, "Could not leave."));
       return;
     }
-    window.location.href = data.hasCircle ? "/home" : "/family";
+    window.location.href = "/circles";
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="font-serif text-5xl">Family</h1>
-        <p className="mt-2 text-muted">The people who can see this room. Share the code, and only they can come in.</p>
+        <h1 className="font-serif text-5xl">Family circles</h1>
+        <p className="mt-2 text-muted">Private rooms for family and close friends. Posts here never show up on the public feed.</p>
       </div>
       {error ? <p className="text-sm text-terra">{error}</p> : null}
       {notice ? <p className="text-sm text-pine">{notice}</p> : null}
@@ -124,12 +124,13 @@ export function FamilyPanel() {
           ))}
         </ul>
       ) : null}
-      {user.memberships.length > 1 ? (
+      {user.memberships.length > 0 ? (
         <section className="space-y-2">
           <h2 className="font-serif text-2xl">Your circles</h2>
           {user.memberships.map((membership) => (
             <button key={membership.family.id} type="button" onClick={() => void switchTo(membership.family.id)} className="block w-full rounded-2xl border border-line bg-card px-4 py-3 text-left">
-              {membership.family.name} {membership.family.id === user.active?.family.id ? "· here now" : ""}
+              {membership.family.name}
+              <span className="mt-1 block text-sm font-normal text-muted">Open this private circle</span>
             </button>
           ))}
         </section>

@@ -20,8 +20,19 @@ function kindFor(file: File, forceVoice = false): Draft["kind"] | null {
   return "file";
 }
 
-export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDTO) => void; openSignal?: number }) {
+export function Composer({
+  onPosted,
+  openSignal = 0,
+  destination = "circle",
+  familyId,
+}: {
+  onPosted: (post: PostDTO) => void;
+  openSignal?: number;
+  destination?: "public" | "circle";
+  familyId?: string;
+}) {
   const { user } = useApp();
+  const [target, setTarget] = useState(destination === "public" ? "public" : familyId || user.active?.family.id || "public");
   const [body, setBody] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [drafts, setDrafts] = useState<Draft[]>([]);
@@ -36,6 +47,10 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
   const draftsRef = useRef(drafts);
   const box = useRef<HTMLTextAreaElement>(null);
   draftsRef.current = drafts;
+
+  useEffect(() => {
+    setTarget(destination === "public" ? "public" : familyId || user.active?.family.id || "public");
+  }, [destination, familyId, user.active?.family.id]);
 
   useEffect(() => {
     if (!openSignal) return;
@@ -123,6 +138,11 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
     setProgress(0);
     const form = new FormData();
     form.set("body", body.trim());
+    if (target === "public") form.set("destination", "public");
+    else {
+      form.set("destination", "circle");
+      form.set("familyId", target);
+    }
     drafts.forEach((draft) => form.append("files", draft.file, draft.file.name));
     const result = await new Promise<{ ok: boolean; data: { post?: PostDTO; error?: string } }>((resolve) => {
       const xhr = new XMLHttpRequest();
@@ -151,6 +171,10 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
   }
 
   const canPost = Boolean(body.trim() || drafts.length);
+  const audience = target === "public"
+    ? "Everyone on KinMingle"
+    : user.memberships.find((item) => item.family.id === target)?.family.name || "your circle";
+  const prompt = target === "public" ? "Share something with KinMingle…" : "Share a moment with the family…";
 
   return (
     <section id="share-composer" className="rounded-2xl border border-line bg-card p-4 shadow-card sm:p-5">
@@ -158,14 +182,14 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
         <Avatar name={user.name} color={user.avatarColor} />
         {expanded ? (
           <label className="block min-w-0 flex-1">
-            <span className="sr-only">Share a moment with the family</span>
+            <span className="sr-only">{prompt}</span>
             <textarea
               ref={box}
               value={body}
               onChange={(event) => setBody(event.target.value)}
               maxLength={4000}
               rows={3}
-              placeholder="Share a moment with the family…"
+              placeholder={prompt}
               className="w-full resize-none rounded-xl bg-paper px-4 py-3 text-base leading-relaxed outline-none placeholder:text-muted"
             />
           </label>
@@ -175,7 +199,7 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
             onClick={() => setExpanded(true)}
             className="min-h-11 min-w-0 flex-1 rounded-xl bg-paper px-4 text-left text-base text-muted"
           >
-            Share a moment with the family…
+            {prompt}
           </button>
         )}
       </div>
@@ -196,6 +220,23 @@ export function Composer({ onPosted, openSignal = 0 }: { onPosted: (post: PostDT
         <p className="mt-3 text-sm text-muted" role="status">Uploading {Math.round(progress * 100)}%</p>
       ) : null}
       {error ? <p className="mt-3 text-sm text-terra" role="alert">{error}</p> : null}
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+        <label className="text-muted" htmlFor="post-destination">Posting to</label>
+        <select
+          id="post-destination"
+          value={target}
+          onChange={(event) => setTarget(event.target.value)}
+          className="min-h-11 rounded-xl border border-line bg-paper px-3 font-semibold text-ink"
+        >
+          <option value="public">Public · Everyone on KinMingle</option>
+          {user.memberships.map((item) => (
+            <option key={item.family.id} value={item.family.id}>
+              {item.family.name} · Private circle
+            </option>
+          ))}
+        </select>
+        <span className="text-muted">{audience}</span>
+      </div>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
           <FileButton label="Photo" icon="photo" accept={ACCEPT.photo} onFiles={addFiles} />

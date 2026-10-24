@@ -18,6 +18,8 @@ export async function GET() {
       email: auth.user.email,
       bio: auth.user.bio,
       avatarColor: auth.user.avatarColor,
+      hasAvatar: auth.user.hasAvatar,
+      hasCover: auth.user.hasCover,
       admin: auth.user.admin,
       hasCircle: Boolean(auth.active),
       active: auth.active,

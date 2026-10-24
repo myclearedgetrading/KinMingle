@@ -34,7 +34,7 @@ export default function JoinPage() {
       setError(errorMessage(data, "Could not create the account."));
       return;
     }
-    window.location.href = "/home";
+    window.location.href = "/feed";
   }
 
   return (

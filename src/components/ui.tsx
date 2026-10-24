@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTML
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
-    <Link href="/home" className={`inline-flex items-center gap-2 font-sans text-2xl font-semibold tracking-tight ${className}`}>
+    <Link href="/feed" className={`inline-flex items-center gap-2 font-sans text-2xl font-semibold tracking-tight ${className}`}>
       <img src="/brand/km.png" alt="" className="h-8 w-8" />
       KinMingle
     </Link>

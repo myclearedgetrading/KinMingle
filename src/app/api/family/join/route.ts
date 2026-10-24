@@ -22,5 +22,5 @@ export async function POST(req: Request) {
     create: { userId: auth.user.id, familyId: family.id, role: "member" },
   });
   await prisma.user.update({ where: { id: auth.user.id }, data: { activeFamilyId: family.id } });
-  return json({ ok: true });
+  return json({ ok: true, familyId: family.id });
 }

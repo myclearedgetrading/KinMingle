@@ -194,8 +194,13 @@ export function Feed({ authorId, showComposer = true }: { authorId?: string; sho
           ) : null}
           {home && showComposer ? (
             <Composer
+              destination="circle"
+              familyId={user.active?.family.id}
               openSignal={openSignal}
-              onPosted={(post) => setPosts((current) => [post, ...current.filter((item) => item.id !== post.id)])}
+              onPosted={(post) => {
+                if (post.visibility !== "circle" || post.familyId !== user.active?.family.id) return;
+                setPosts((current) => [post, ...current.filter((item) => item.id !== post.id)]);
+              }}
             />
           ) : null}
 

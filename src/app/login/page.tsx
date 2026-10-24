@@ -25,7 +25,7 @@ export default function LoginPage() {
       return;
     }
     const next = new URLSearchParams(window.location.search).get("next");
-    const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/home";
+    const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/feed";
     window.location.href = dest;
   }
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
       <h1 className="mt-8 font-serif text-5xl text-ink">Welcome back.</h1>
-      <p className="mt-3 text-muted">Sign in to the circle you already belong to.</p>
+      <p className="mt-3 text-muted">Sign in and catch up with KinMingle.</p>
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <label className="block text-sm font-medium">
           Email

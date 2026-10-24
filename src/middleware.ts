@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
 
   if (signedIn && (pathname === "/login" || pathname === "/")) {
     const url = req.nextUrl.clone();
-    url.pathname = "/home";
+    url.pathname = "/feed";
     url.search = "";
     return NextResponse.redirect(url);
   }

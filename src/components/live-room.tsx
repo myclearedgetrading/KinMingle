@@ -624,7 +624,7 @@ export function LiveRoom({ sessionId }: { sessionId: string }) {
         ) : (
           <p className="border-t border-line p-4 text-sm text-muted">
             {saving ? "Saving the recording…" : recordingUrl ? "The recording is on this page and on the family page." : "This live has ended."}{" "}
-            <Link href="/home" className="font-semibold text-ink">Back home</Link>
+            <Link href="/feed" className="font-semibold text-ink">Back home</Link>
           </p>
         )}
       </aside>

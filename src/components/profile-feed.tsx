@@ -6,7 +6,7 @@ import { PostCard } from "./post-card";
 
 export function ProfileFeed({ initialPosts }: { initialPosts: PostDTO[] }) {
   const [posts, setPosts] = useState(initialPosts);
-  if (posts.length === 0) return <p className="text-sm text-muted">No updates in this circle yet.</p>;
+  if (posts.length === 0) return <p className="text-sm text-muted">No public posts yet.</p>;
   return (
     <div className="space-y-4">
       {posts.map((post) => (

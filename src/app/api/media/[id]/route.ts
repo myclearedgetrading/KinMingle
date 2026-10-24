@@ -2,6 +2,7 @@ import { createReadStream, statSync } from "fs";
 import { Readable } from "stream";
 import { prisma } from "@/lib/db";
 import { error } from "@/lib/http";
+import { canSeePost } from "@/lib/access";
 import { getAuth } from "@/lib/session";
 import { resolveUpload } from "@/lib/storage";
 
@@ -14,11 +15,9 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
   const { id } = await ctx.params;
   const media = await prisma.media.findUnique({
     where: { id },
-    include: { post: { select: { familyId: true } } },
+    include: { post: { select: { familyId: true, visibility: true } } },
   });
-  if (!media) return error("File not found.", 404);
-  const allowed = auth.memberships.some((item) => item.family.id === media.post.familyId);
-  if (!allowed) return error("File not found.", 404);
+  if (!media || !canSeePost(auth, media.post)) return error("File not found.", 404);
 
   let full: string;
   try {
